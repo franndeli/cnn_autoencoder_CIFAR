@@ -1,23 +1,17 @@
 import torch
 import torch.nn as nn
 
-import torchvision
-import torchvision.transforms as transforms
-
 import matplotlib.pyplot as plt
 import numpy as np
 
-from autoencoderCNN import AutoencoderCNN
+from autoencoderCNN import AutoencoderCNN, prepare_dataloaders
 
-def load_model(model_path='./cifar_autoencoder.pth'):
+def load_model(model_path='./cifar_model.pth'):
     model = AutoencoderCNN()
     model.load_state_dict(torch.load(model_path))
     model.eval()  # Modo evaluación
     print(f"Modelo cargado desde: {model_path}")
     return model
-
-def unnormalize(img):
-    return img / 2 + 0.5
 
 def show_reconstructions(model, testloader, n_images=8):
     classes = ('plane', 'car', 'bird', 'cat', 'deer', 
@@ -33,12 +27,12 @@ def show_reconstructions(model, testloader, n_images=8):
     fig, axes = plt.subplots(2, n_images, figsize=(16, 4))
     
     for i in range(min(n_images, len(images))):
-        orig_img = unnormalize(images[i]).numpy()
+        orig_img = images[i].numpy()
         axes[0, i].imshow(np.transpose(orig_img, (1, 2, 0)))
         axes[0, i].set_title(f'Original\n{classes[labels[i]]}')
         axes[0, i].axis('off')
         
-        recon_img = unnormalize(reconstructed[i]).numpy()
+        recon_img = reconstructed[i].numpy()
         axes[1, i].imshow(np.transpose(recon_img, (1, 2, 0)))
         axes[1, i].set_title('Reconstruida')
         axes[1, i].axis('off')
@@ -46,7 +40,6 @@ def show_reconstructions(model, testloader, n_images=8):
     plt.tight_layout()
     plt.savefig('reconstructions.png', dpi=150, bbox_inches='tight')
     print("Visualización guardada en: reconstructions.png")
-    plt.show()
 
 def calculate_test_loss(model, testloader):
     criterion = nn.MSELoss()
@@ -76,18 +69,8 @@ if __name__ == '__main__':
     print("=" * 60)
     
     # Cargar modelo
-    model = load_model('./cifar_autoencoder.pth')
-    
-    # Preparar datos de test
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
-    
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False, 
-                                           download=True, transform=transform)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=8, 
-                                             shuffle=True, num_workers=0)
+    model = load_model('./cifar_model.pth')
+    _, _, testloader = prepare_dataloaders()
     
     # 1. Mostrar reconstrucciones
     print("\n1. Generando visualizaciones...")
