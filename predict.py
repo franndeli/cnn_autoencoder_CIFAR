@@ -9,8 +9,8 @@ from autoencoderCNN import AutoencoderCNN, prepare_dataloaders
 def load_model(model_path='./cifar_model.pth'):
     model = AutoencoderCNN()
     model.load_state_dict(torch.load(model_path))
-    model.eval()  # Modo evaluación
-    print(f"Modelo cargado desde: {model_path}")
+    model.eval()
+    print(f"Model: {model_path}")
     return model
 
 def show_reconstructions(model, testloader, n_images=8):
@@ -34,12 +34,11 @@ def show_reconstructions(model, testloader, n_images=8):
         
         recon_img = reconstructed[i].numpy()
         axes[1, i].imshow(np.transpose(recon_img, (1, 2, 0)))
-        axes[1, i].set_title('Reconstruida')
+        axes[1, i].set_title('Recontructed')
         axes[1, i].axis('off')
     
     plt.tight_layout()
     plt.savefig('reconstructions.png', dpi=150, bbox_inches='tight')
-    print("Visualización guardada en: reconstructions.png")
 
 def calculate_test_loss(model, testloader):
     criterion = nn.MSELoss()
