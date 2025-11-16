@@ -13,7 +13,7 @@ class AutoencoderCNN(nn.Module):
 
         # Encoder
         self.conv1 = nn.Conv2d(3, 8, 3, padding=1) # input channels: 3 (RGB), output channels: 8, kernel size: 3x3
-        self.maxpool = nn.MaxPool2d(2, padding=0) # kernel size: 2x2, stride: defaults to kernel size
+        self.maxpool = nn.MaxPool2d(2, stride=2, padding=0) # kernel size: 2x2, stride: defaults to kernel size
         self.conv2 = nn.Conv2d(8, 12, 3, padding=1) # input channels: 8, output channels: 12, kernel size: 3x3
         self.conv3 = nn.Conv2d(12, 16, 3, padding=1) # input channels: 12, output channels: 16, kernel size: 3x3
 
