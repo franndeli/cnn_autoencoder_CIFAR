@@ -5,10 +5,9 @@ import numpy as np
 
 from .test.test_autoencoderCNN import FlexibleAutoencoder
 from autoencoderCNN import prepare_dataloaders
-from .test.experiments import EXP_1C_TINY_LATENT
+from .test.experiments import EXP_1C_TINY_LATENT # ! CHANGE
 
 def load_flexible_model(model_path, config):
-    """Load a model with specific architecture configuration"""
     model = FlexibleAutoencoder(config)
     model.load_state_dict(torch.load(model_path))
     model.eval()
@@ -23,7 +22,6 @@ def show_reconstructions(model, testloader, n_images=8, save_name='reconstructio
     dataiter = iter(testloader)
     images, labels = next(dataiter)
     
-    # Hacer predicciones
     with torch.no_grad():
         reconstructed = model(images)
     
@@ -64,16 +62,15 @@ if __name__ == '__main__':
     print("COMPARING EXPERIMENT RESULTS")
     print("=" * 60)
     
-    # Load data
     _, _, testloader = prepare_dataloaders()
     
     model_1a = load_flexible_model(
-        'models/exp_1c_tiny_latent.pth',
-        EXP_1C_TINY_LATENT
+        'models/exp_1c_tiny_latent.pth', # ! CHANGE
+        EXP_1C_TINY_LATENT # ! CHANGE
     )
     
     show_reconstructions(model_1a, testloader, n_images=8, 
-                        save_name='reconstructions_1b_tiny.png')
+                        save_name='reconstructions_1b_tiny.png') # ! CHANGE
     loss_1a = calculate_test_loss(model_1a, testloader)
     
     print("\n" + "=" * 60)
