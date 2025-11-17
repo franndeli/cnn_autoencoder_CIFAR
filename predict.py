@@ -1,19 +1,22 @@
 import torch
 import torch.nn as nn
-
 import matplotlib.pyplot as plt
 import numpy as np
 
-from autoencoderCNN import AutoencoderCNN, prepare_dataloaders
+from .test.test_autoencoderCNN import FlexibleAutoencoder
+from autoencoderCNN import prepare_dataloaders
+from .test.experiments import EXP_1C_TINY_LATENT
 
-def load_model(model_path='./cifar_model.pth'):
-    model = AutoencoderCNN()
+def load_flexible_model(model_path, config):
+    """Load a model with specific architecture configuration"""
+    model = FlexibleAutoencoder(config)
     model.load_state_dict(torch.load(model_path))
     model.eval()
-    print(f"Model: {model_path}")
+    print(f"Model loaded: {config['name']}")
+    print(f"Latent size: {model.calculate_latent_size()}")
     return model
 
-def show_reconstructions(model, testloader, n_images=8):
+def show_reconstructions(model, testloader, n_images=8, save_name='reconstructions.png'):
     classes = ('plane', 'car', 'bird', 'cat', 'deer', 
                'dog', 'frog', 'horse', 'ship', 'truck')
     
@@ -34,11 +37,12 @@ def show_reconstructions(model, testloader, n_images=8):
         
         recon_img = reconstructed[i].numpy()
         axes[1, i].imshow(np.transpose(recon_img, (1, 2, 0)))
-        axes[1, i].set_title('Recontructed')
+        axes[1, i].set_title('Reconstructed')
         axes[1, i].axis('off')
     
     plt.tight_layout()
-    plt.savefig('reconstructions.png', dpi=150, bbox_inches='tight')
+    plt.savefig(save_name, dpi=150, bbox_inches='tight')
+    print(f"Saved: {save_name}")
 
 def calculate_test_loss(model, testloader):
     criterion = nn.MSELoss()
@@ -52,43 +56,24 @@ def calculate_test_loss(model, testloader):
             test_loss += loss.item()
     
     avg_loss = test_loss / len(testloader)
-    print(f"Pérdida promedio en test: {avg_loss:.6f}")
+    print(f"Test loss: {avg_loss:.6f}")
     return avg_loss
-
-def predict_single_image(model, image_tensor):
-    with torch.no_grad():
-        if image_tensor.dim() == 3:
-            image_tensor = image_tensor.unsqueeze(0)  # Añadir dimensión batch
-        reconstructed = model(image_tensor)
-    return reconstructed.squeeze(0)
 
 if __name__ == '__main__':
     print("=" * 60)
-    print("PREDICCIÓN CON AUTOENCODER")
+    print("COMPARING EXPERIMENT RESULTS")
     print("=" * 60)
     
-    # Cargar modelo
-    model = load_model('./cifar_model.pth')
+    # Load data
     _, _, testloader = prepare_dataloaders()
     
-    # 1. Mostrar reconstrucciones
-    print("\n1. Generando visualizaciones...")
-    show_reconstructions(model, testloader, n_images=8)
+    model_1a = load_flexible_model(
+        'models/exp_1c_tiny_latent.pth',
+        EXP_1C_TINY_LATENT
+    )
     
-    # 2. Calcular pérdida en test
-    print("\n2. Calculando pérdida en conjunto de test...")
-    calculate_test_loss(model, testloader)
-    
-    # 3. Ejemplo de predicción individual
-    print("\n3. Ejemplo de predicción individual...")
-    dataiter = iter(testloader)
-    images, _ = next(dataiter)
-    single_image = images[0]
-    
-    reconstructed = predict_single_image(model, single_image)
-    print(f"   Entrada shape: {single_image.shape}")
-    print(f"   Salida shape: {reconstructed.shape}")
+    show_reconstructions(model_1a, testloader, n_images=8, 
+                        save_name='reconstructions_1b_tiny.png')
+    loss_1a = calculate_test_loss(model_1a, testloader)
     
     print("\n" + "=" * 60)
-    print("Predicción completada!")
-    print("=" * 60)

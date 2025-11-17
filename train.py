@@ -83,6 +83,5 @@ if __name__ == '__main__':
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     
-    # Guardar la gráfica
     plt.savefig('loss_plot.png', dpi=300, bbox_inches='tight')
     print("Loss plot saved as 'loss_plot.png'")

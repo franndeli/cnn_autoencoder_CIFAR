@@ -4,3 +4,7 @@
 cifar_model.pth
 reconstructions.png
 loss_plot.png
+models
+multiple_images_comparison.png
+
+/test/experiment_results_*
