@@ -2,9 +2,9 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
-from test_autoencoderCNN import FlexibleAutoencoder
+from test.test_autoencoderCNN import FlexibleAutoencoder
 from autoencoderCNN import prepare_dataloaders
-from experiments import (
+from test.experiments import (
     BASELINE,
     EXP_1A_SMALL_LATENT,
     EXP_1B_LARGE_LATENT,

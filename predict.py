@@ -3,9 +3,9 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .test.test_autoencoderCNN import FlexibleAutoencoder
+from test.test_autoencoderCNN import FlexibleAutoencoder
 from autoencoderCNN import prepare_dataloaders
-from .test.experiments import EXP_1C_TINY_LATENT # ! CHANGE
+from test.experiments import EXP_1C_TINY_LATENT # ! CHANGE
 
 def load_flexible_model(model_path, config):
     model = FlexibleAutoencoder(config)

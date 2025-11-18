@@ -241,7 +241,7 @@ if __name__ == '__main__':
     print("ANALYZING EXPERIMENT RESULTS")
     print("=" * 70)
     
-    results = load_results("./test/experiment_results_20251117_194802.json") # ! CHANGE
+    results = load_results("test/experiment_results_20251117_194802.json") # ! CHANGE
     
     print("\nGenerating plots...\n")
     

@@ -4,10 +4,10 @@ import torch.optim as optim
 import json
 from datetime import datetime
 
-from test_autoencoderCNN import FlexibleAutoencoder
+from test.test_autoencoderCNN import FlexibleAutoencoder
 from autoencoderCNN import prepare_dataloaders
 from constants import NUM_EPOCHS, LEARNING_RATE
-from experiments import ALL_EXPERIMENTS
+from test.experiments import ALL_EXPERIMENTS
 
 def train_model(model, trainloader, validloader, num_epochs=10):
     criterion = nn.MSELoss()
