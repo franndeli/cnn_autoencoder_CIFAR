@@ -96,7 +96,7 @@ if __name__ == '__main__':
         }
         results.append(result)
         
-        torch.save(model.state_dict(), f"models/{exp_config['name']}.pth")
+        torch.save(model.state_dict(), f"../models/{exp_config['name']}.pth")
         print(f"✓ Model saved: {exp_config['name']}.pth")
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
