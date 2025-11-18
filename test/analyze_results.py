@@ -235,6 +235,129 @@ def create_summary_table(results):
     
     print("=" * 100)
 
+def plot_train_val_test_comparison(results):
+    valid_results = [r for r in results if r.get('test_loss') is not None]
+    
+    if not valid_results:
+        print("⚠️  No test loss data available")
+        return
+    
+    latent_exp = [r for r in valid_results if 'exp_1' in r['name'] or r['name'] == 'baseline']
+    latent_exp = sorted(latent_exp, key=lambda x: x['latent_size'])
+    
+    names = [r['name'].replace('exp_1', '').replace('_', '\n').replace('baseline', 'Baseline') 
+             for r in latent_exp]
+    train_losses = [r['final_train_loss'] for r in latent_exp]
+    val_losses = [r['best_val_loss'] for r in latent_exp]
+    test_losses = [r['test_loss'] for r in latent_exp]
+    
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    x = np.arange(len(names))
+    width = 0.25
+    
+    bars1 = ax.bar(x - width, train_losses, width, label='Train Loss', 
+                   color='steelblue', edgecolor='black', linewidth=1.5)
+    bars2 = ax.bar(x, val_losses, width, label='Validation Loss', 
+                   color='coral', edgecolor='black', linewidth=1.5)
+    bars3 = ax.bar(x + width, test_losses, width, label='Test Loss', 
+                   color='lightgreen', edgecolor='black', linewidth=1.5)
+    
+    for bars in [bars1, bars2, bars3]:
+        for bar in bars:
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                   f'{height:.4f}', ha='center', va='bottom', fontsize=8)
+    
+    ax.set_ylabel('Loss (MSE)', fontsize=12, fontweight='bold')
+    ax.set_xlabel('Configuration', fontsize=12, fontweight='bold')
+    ax.set_title('Train vs Validation vs Test Loss Comparison', 
+                fontsize=14, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(names, fontsize=10)
+    ax.legend(fontsize=11)
+    ax.grid(axis='y', alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig('plot_7_train_val_test_comparison.png', dpi=300, bbox_inches='tight')
+    print("✓ Saved: plot_7_train_val_test_comparison.png")
+    plt.show()
+
+def plot_generalization_analysis(results):
+    valid_results = [r for r in results if r.get('test_loss') is not None]
+    
+    if not valid_results:
+        print("⚠️  No test loss data available")
+        return
+    
+    names = [r['name'].replace('exp_', '').replace('_', ' ').title() for r in valid_results]
+    
+    val_train_gap = [r['best_val_loss'] - r['final_train_loss'] for r in valid_results]
+    test_train_gap = [r['test_loss'] - r['final_train_loss'] for r in valid_results]
+    
+    sorted_indices = np.argsort(test_train_gap)
+    names = [names[i] for i in sorted_indices]
+    val_train_gap = [val_train_gap[i] for i in sorted_indices]
+    test_train_gap = [test_train_gap[i] for i in sorted_indices]
+    
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    y = np.arange(len(names))
+    width = 0.35
+    
+    bars1 = ax.barh(y - width/2, val_train_gap, width, 
+                    label='Val - Train Gap', color='coral', 
+                    edgecolor='black', linewidth=1.5)
+    bars2 = ax.barh(y + width/2, test_train_gap, width, 
+                    label='Test - Train Gap', color='lightgreen',
+                    edgecolor='black', linewidth=1.5)
+    
+    ax.axvline(x=0, color='black', linestyle='--', linewidth=1.5)
+    
+    ax.set_xlabel('Generalization Gap (Loss Difference)', fontsize=12, fontweight='bold')
+    ax.set_title('Generalization Analysis: Validation and Test Gaps', 
+                fontsize=14, fontweight='bold')
+    ax.set_yticks(y)
+    ax.set_yticklabels(names, fontsize=9)
+    ax.legend(fontsize=11)
+    ax.grid(axis='x', alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig('plot_8_generalization_analysis.png', dpi=300, bbox_inches='tight')
+    print("✓ Saved: plot_8_generalization_analysis.png")
+    plt.show()
+
+def create_complete_summary_table(results):
+    print("\n" + "=" * 110)
+    print("COMPLETE EXPERIMENT RESULTS (TRAIN / VALIDATION / TEST)")
+    print("=" * 110)
+    print(f"{'Experiment':<25} {'Latent':<10} {'Train Loss':<12} {'Val Loss':<12} {'Test Loss':<12}")
+    print("-" * 110)
+    
+    sorted_results = sorted(results, key=lambda x: x.get('test_loss', float('inf')))
+    
+    for r in sorted_results:
+        test_loss_str = f"{r['test_loss']:.6f}" if r.get('test_loss') else "N/A"
+        print(f"{r['name']:<25} {r['latent_size']:<10} "
+              f"{r['final_train_loss']:<12.6f} {r['best_val_loss']:<12.6f} {test_loss_str:<12}")
+    
+    print("=" * 110)
+    
+    valid_results = [r for r in results if r.get('test_loss') is not None]
+    if valid_results:
+        best_test = min(valid_results, key=lambda x: x['test_loss'])
+        print("\n🏆 BEST MODEL (by Test Loss):")
+        print(f"  {best_test['name']}: {best_test['test_loss']:.6f}")
+        
+        # Check if validation choice matches test performance
+        best_val = min(valid_results, key=lambda x: x['best_val_loss'])
+        if best_val['name'] != best_test['name']:
+            print(f"\n⚠️  Note: Best validation model ({best_val['name']}) differs from best test model!")
+        else:
+            print(f"\n✓ Validation correctly identified the best model")
+    
+    print("=" * 110)
+
 if __name__ == '__main__':
     print("Current working directory:", os.getcwd())
     print("=" * 70)
@@ -251,8 +374,13 @@ if __name__ == '__main__':
     plot_parameters_vs_performance(results)
     plot_experiment_categories(results)
     plot_overfitting_analysis(results)
+    plot_train_val_test_comparison(results)
+    plot_generalization_analysis(results)
     
-    create_summary_table(results)
+    # Tabla completa
+    create_complete_summary_table(results)
+    
+    # create_summary_table(results)
     
     print("\n" + "=" * 70)
     print("✓ Analysis complete! All plots saved.")
