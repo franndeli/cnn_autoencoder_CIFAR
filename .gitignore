@@ -8,3 +8,4 @@ models
 multiple_images_comparison.png
 
 /test/experiment_results_*
+*plot_*.png
