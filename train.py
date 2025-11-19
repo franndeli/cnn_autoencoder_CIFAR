@@ -3,85 +3,97 @@ import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 
-from autoencoderCNN import AutoencoderCNN, prepare_dataloaders
+from autoencoderCAE_colourisation import AutoencoderCNN, prepare_dataloaders
+# from autoencoderCNN import AutoencoderCNN, prepare_dataloaders
 
 from constants import NUM_EPOCHS, LEARNING_RATE
-    
+
 if __name__ == '__main__':
     model = AutoencoderCNN()
-
-    trainset, validset, testloader = prepare_dataloaders()
+    print(model)
+    trainloader, validloader, testloader = prepare_dataloaders()
 
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
     best_val_loss = float('inf')
-
     train_losses = []
     val_losses = []
     epochs_list = []
 
-    for epoch in range(NUM_EPOCHS):
-        print(f'Epoch {epoch}/{NUM_EPOCHS}')
+    print("=" * 60)
+    print("TRAINING COLORIZATION MODEL (LAB COLOR SPACE)")
+    print("=" * 60)
 
+    for epoch in range(NUM_EPOCHS):
+        print(f'\nEpoch {epoch+1}/{NUM_EPOCHS}')
+
+        # ============ TRAINING ============
         model.train()
         train_loss = 0.0
 
-        for i, data in enumerate(trainset, 0):
-            inputs, _  = data
+        for L, ab_target in trainloader:
+            ab_target = ab_target
 
             optimizer.zero_grad()
 
-            # forward + backward
-            outputs = model.forward(inputs)
-            loss = criterion(outputs, inputs)
+            # Forward: predecir ab desde L
+            ab_predicted = model(L)
+            
+            # Loss: diferencia entre ab predicho y real
+            loss = criterion(ab_predicted, ab_target)
+            
             loss.backward()
             optimizer.step()
 
             train_loss += loss.item()
 
-        avg_train_loss = train_loss / len(trainset)
-        print(f'  Train Loss: {avg_train_loss:.4f}')
+        avg_train_loss = train_loss / len(trainloader)
 
+        # ============ VALIDATION ============
         model.eval()
         val_loss = 0.0
 
         with torch.no_grad():
-            for data in validset:
-                images, _ = data
-                outputs = model(images)
-                loss = criterion(outputs, images)
+            for L, ab_target in validloader:
+                ab_target = ab_target
+                
+                ab_predicted = model(L)
+                loss = criterion(ab_predicted, ab_target)
                 val_loss += loss.item()
         
-        avg_val_loss = val_loss / len(validset)
+        avg_val_loss = val_loss / len(validloader)
 
         train_losses.append(avg_train_loss)
         val_losses.append(avg_val_loss)
         epochs_list.append(epoch + 1)
 
-        print(f'Epoch [{epoch + 1}/{NUM_EPOCHS}]')
-        print(f'  Train Loss: {avg_train_loss:.4f}')
-        print(f'  Val Loss:   {avg_val_loss:.4f}')
+        print(f'  Train Loss: {avg_train_loss:.6f}')
+        print(f'  Val Loss:   {avg_val_loss:.6f}')
 
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
-            torch.save(model.state_dict(), './cifar_model.pth')
+            torch.save(model.state_dict(), './cifar_model_colorization.pth')
             print(f'  ✓ Best model saved!')
         
         print("-" * 60)
 
+    # ============ PLOT LOSSES ============
     print("\n" + "=" * 60)
+    print("Training complete!")
+    print(f"Best validation loss: {best_val_loss:.6f}")
+    print("=" * 60)
 
     plt.figure(figsize=(10, 6))
     plt.plot(epochs_list, train_losses, label='Training Loss', marker='o', linewidth=2)
     plt.plot(epochs_list, val_losses, label='Validation Loss', marker='s', linewidth=2)
     
     plt.xlabel('Epoch', fontsize=12)
-    plt.ylabel('Loss', fontsize=12)
-    plt.title('Training and Validation Loss', fontsize=14, fontweight='bold')
+    plt.ylabel('Loss (MSE on ab channels)', fontsize=12)
+    plt.title('Colorization Training Progress', fontsize=14, fontweight='bold')
     plt.legend(fontsize=11)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     
-    plt.savefig('loss_plot.png', dpi=300, bbox_inches='tight')
-    print("Loss plot saved as 'loss_plot.png'")
+    plt.savefig('loss_plot_colorization.png', dpi=300, bbox_inches='tight')
+    print("Loss plot saved as 'loss_plot_colorization.png'")
