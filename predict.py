@@ -5,7 +5,7 @@ import numpy as np
 
 from test.test_autoencoderCNN import FlexibleAutoencoder
 from autoencoderCNN import prepare_dataloaders
-from test.experiments import EXP_1C_TINY_LATENT # ! CHANGE
+from test.experiments import BASELINE # ! CHANGE
 
 def load_flexible_model(model_path, config):
     model = FlexibleAutoencoder(config)
@@ -65,12 +65,12 @@ if __name__ == '__main__':
     _, _, testloader = prepare_dataloaders()
     
     model_1a = load_flexible_model(
-        'models/exp_1c_tiny_latent.pth', # ! CHANGE
-        EXP_1C_TINY_LATENT # ! CHANGE
+        'cifar_model.pth', # ! CHANGE
+        BASELINE # ! CHANGE
     )
     
     show_reconstructions(model_1a, testloader, n_images=8, 
-                        save_name='reconstructions_1b_tiny.png') # ! CHANGE
+                        save_name='RECONSTRUCTION.png') # ! CHANGE
     loss_1a = calculate_test_loss(model_1a, testloader)
     
     print("\n" + "=" * 60)
