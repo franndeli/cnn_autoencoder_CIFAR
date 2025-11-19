@@ -46,14 +46,14 @@ def prepare_dataloaders():
         transforms.ToTensor(),
     ])
 
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    dataset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
 
-    total_trainset = len(trainset)
+    total_trainset = len(dataset)
     train_size = int(0.8 * total_trainset)
     valid_size = int(0.1 * total_trainset)
     test_size = total_trainset - train_size - valid_size
 
-    trainset, validset, testset = torch.utils.data.random_split(trainset, [train_size, valid_size, test_size])
+    trainset, validset, testset = torch.utils.data.random_split(dataset, [train_size, valid_size, test_size])
 
     trainset = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=0)
     validset = torch.utils.data.DataLoader(validset, batch_size=BATCH_SIZE, shuffle=False, num_workers=0)
