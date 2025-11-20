@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 
 from constants import BATCH_SIZE
 
-class AutoencoderCNN(nn.Module):
+class AutoencoderCAE(nn.Module):
     def __init__(self):
         super().__init__()
 

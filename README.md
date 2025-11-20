@@ -77,11 +77,11 @@ loss_function = MSELoss
 ## Example Usage
 
 ```python
-from autoencoderCNN import AutoencoderCNN
+from autoencoderCAE import AutoencoderCAE
 import torch
 
 # Load trained model
-model = AutoencoderCNN()
+model = AutoencoderCAE()
 model.load_state_dict(torch.load('cifar_autoencoder.pth'))
 model.eval()
 
@@ -94,7 +94,7 @@ with torch.no_grad():
 
 ```
 cifar10-cnn-autoencoder/
-├── autoencoderCNN.py       # Model architecture
+├── autoencoderCAE.py       # Model architecture
 ├── train_cnn.py            # Training script
 ├── predict_cnn.py          # Evaluation & visualization
 ├── .gitignore              # Git ignore (data, cache, model)

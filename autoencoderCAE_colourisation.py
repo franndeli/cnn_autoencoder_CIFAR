@@ -5,25 +5,25 @@ import torchvision
 import torchvision.transforms as transforms
 
 from torch.utils.data import Dataset, DataLoader
-# from skimage.color import rgb2lab, lab2rgb
+from skimage.color import rgb2lab, lab2rgb
 import numpy as np
 
 from constants import BATCH_SIZE
 
-class AutoencoderCNN(nn.Module):
+class AutoencoderCAE(nn.Module):
     def __init__(self):
         super().__init__()
-        # Encoder: acepta L channel (1 canal)
-        self.conv1 = nn.Conv2d(1, 16, 3, padding=1)
-        self.maxpool = nn.MaxPool2d(2, stride=2, padding=0)
-        self.conv2 = nn.Conv2d(16, 24, 3, padding=1)
-        self.conv3 = nn.Conv2d(24, 32, 3, padding=1)
+        # Encoder
+        self.conv1 = nn.Conv2d(1, 64, 3, padding=1)
+        self.conv2 = nn.Conv2d(64, 128, 3, padding=1)
+        self.conv3 = nn.Conv2d(128, 256, 3, padding=1)
+        self.maxpool = nn.MaxPool2d(2, stride=2)
         
-        # Decoder: predice ab channels (2 canales)
+        # Decoder
+        self.conv4 = nn.Conv2d(256, 128, 3, padding=1)
+        self.conv5 = nn.Conv2d(128, 64, 3, padding=1)
+        self.conv6 = nn.Conv2d(64, 2, 3, padding=1)
         self.upsample = nn.Upsample(scale_factor=2)
-        self.conv4 = nn.Conv2d(32, 24, 3, padding=1)
-        self.conv5 = nn.Conv2d(24, 3, 3, padding=1)
-
 
     def forward(self, x):
         # Encoder
@@ -37,39 +37,43 @@ class AutoencoderCNN(nn.Module):
         x = self.upsample(x)
         x = F.relu(self.conv4(x))
         x = self.upsample(x)
-        x = self.conv5(x)
-        x = torch.sigmoid(x)
+        x = F.relu(self.conv5(x))
+        x = torch.tanh(self.conv6(x))
         
         return x
 
 
 class ColorizationDataset(Dataset):
     def __init__(self, train=True):
-        transform = transforms.Compose([transforms.ToTensor()])
         self.data = torchvision.datasets.CIFAR10(
-            root='./data', train=train, download=True, transform=transform
+            root='./data', train=train, download=True,
+            transform=transforms.ToTensor()
         )
-    
+
     def __len__(self):
         return len(self.data)
-    
+
     def __getitem__(self, idx):
         rgb_img, label = self.data[idx]
-        
-        # Convertir a grayscale
-        grayscale = 0.299 * rgb_img[0] + 0.587 * rgb_img[1] + 0.114 * rgb_img[2]
-        grayscale = grayscale.unsqueeze(0)
-        
-        return grayscale, rgb_img
+
+        rgb = rgb_img.permute(1, 2, 0).numpy()
+        lab = rgb2lab(rgb).astype("float32")
+
+        L  = lab[:, :, 0:1]
+        ab = lab[:, :, 1:]
+
+        L = L / 100.0              # [0,100] -> [0,1]
+        ab = ab / 128.0            # [-128,127] -> [-1,1]
+
+        L  = torch.from_numpy(L).permute(2, 0, 1)
+        ab = torch.from_numpy(ab).permute(2, 0, 1)
+
+        return L, ab
 
 
-def prepare_dataloaders():
-    """Prepara dataloaders con LAB color space"""
-    
-    # Crear datasets
+def prepare_dataloaders():    
     train_dataset = ColorizationDataset(train=True)
     
-    # Split 80/10/10
     total_size = len(train_dataset)
     train_size = int(0.8 * total_size)
     valid_size = int(0.1 * total_size)
@@ -79,12 +83,11 @@ def prepare_dataloaders():
         train_dataset, [train_size, valid_size, test_size]
     )
     
-    # Create dataloaders
     trainloader = DataLoader(
         trainset, 
         batch_size=BATCH_SIZE, 
         shuffle=True, 
-        num_workers=0  # Cambiar a 2-4 si tienes CPU potente
+        num_workers=0
     )
     validloader = DataLoader(
         validset, 
@@ -101,35 +104,21 @@ def prepare_dataloaders():
     
     return trainloader, validloader, testloader
 
+def lab_to_rgb(L, ab):
+    L = L * 100.0
+    ab = ab * 128.0
 
-# def lab_to_rgb(L, ab):
-#     """
-#     Convierte L y ab de vuelta a RGB
-    
-#     Args:
-#         L: tensor (batch, 1, H, W) normalizado [-1, 1]
-#         ab: tensor (batch, 2, H, W) normalizado [-1, 1]
-    
-#     Returns:
-#         rgb: numpy array (batch, H, W, 3) en rango [0, 1]
-#     """
-#     # Desnormalizar
-#     L = (L + 1) * 50          # [-1, 1] → [0, 100]
-#     ab = ab * 110             # [-1, 1] → [-110, 110]
-    
-#     batch_size = L.shape[0]
-#     H, W = L.shape[2], L.shape[3]
-    
-#     rgb_images = []
-    
-#     for i in range(batch_size):
-#         # Reconstruir LAB
-#         lab_img = np.zeros((H, W, 3))
-#         lab_img[:, :, 0] = L[i, 0].cpu().numpy()
-#         lab_img[:, :, 1:] = ab[i].cpu().numpy().transpose(1, 2, 0)
-        
-#         # Convertir a RGB
-#         rgb_img = lab2rgb(lab_img)
-#         rgb_images.append(rgb_img)
-    
-#     return np.array(rgb_images)
+    L = L.cpu().numpy()
+    ab = ab.cpu().numpy()
+
+    B, _, H, W = L.shape
+    rgbs = []
+
+    for i in range(B):
+        lab = np.zeros((H, W, 3), dtype="float32")
+        lab[:, :, 0] = L[i, 0]
+        lab[:, :, 1:] = np.transpose(ab[i], (1, 2, 0))
+        rgb = lab2rgb(lab)
+        rgbs.append(rgb)
+
+    return np.stack(rgbs, axis=0)

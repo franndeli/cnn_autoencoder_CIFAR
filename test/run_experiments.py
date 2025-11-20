@@ -4,8 +4,8 @@ import torch.optim as optim
 import json
 from datetime import datetime
 
-from test.test_autoencoderCNN import FlexibleAutoencoder
-from autoencoderCNN import prepare_dataloaders
+from test.test_autoencoderCAE import FlexibleAutoencoder
+from autoencoderCAE import prepare_dataloaders
 from constants import NUM_EPOCHS, LEARNING_RATE
 from test.experiments import ALL_EXPERIMENTS
 

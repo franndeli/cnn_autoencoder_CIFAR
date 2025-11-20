@@ -15,8 +15,6 @@ class FlexibleAutoencoder(nn.Module):
             self._build_shallow_arch()
         elif self.arch_type == 'deep':
             self._build_deep_arch()
-        else:
-            raise ValueError(f"Unknown architecture type: {self.arch_type}")
     
     def _build_standard_arch(self):
         cfg = self.config

@@ -3,14 +3,21 @@ import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 
-from autoencoderCAE_colourisation import AutoencoderCNN, prepare_dataloaders
-# from autoencoderCNN import AutoencoderCNN, prepare_dataloaders
+from autoencoderCAE_colourisation import AutoencoderCAE, prepare_dataloaders
+
+# Exercise 1
+# from autoencoderCAE import AutoencoderCAE, prepare_dataloaders
 
 from constants import NUM_EPOCHS, LEARNING_RATE
 
 if __name__ == '__main__':
-    model = AutoencoderCNN()
-    print(model)
+    if torch.backends.mps.is_available():
+        device = torch.device('mps')
+    else:
+        device = torch.device('cpu')
+
+    model = AutoencoderCAE().to(device)
+    
     trainloader, validloader, testloader = prepare_dataloaders()
 
     criterion = nn.MSELoss()
@@ -28,19 +35,17 @@ if __name__ == '__main__':
     for epoch in range(NUM_EPOCHS):
         print(f'\nEpoch {epoch+1}/{NUM_EPOCHS}')
 
-        # ============ TRAINING ============
+        # Train
         model.train()
         train_loss = 0.0
 
         for L, ab_target in trainloader:
-            ab_target = ab_target
+            L = L.to(device)
+            ab_target = ab_target.to(device)
 
             optimizer.zero_grad()
-
-            # Forward: predecir ab desde L
             ab_predicted = model(L)
             
-            # Loss: diferencia entre ab predicho y real
             loss = criterion(ab_predicted, ab_target)
             
             loss.backward()
@@ -50,13 +55,14 @@ if __name__ == '__main__':
 
         avg_train_loss = train_loss / len(trainloader)
 
-        # ============ VALIDATION ============
+        # Val
         model.eval()
         val_loss = 0.0
 
         with torch.no_grad():
             for L, ab_target in validloader:
-                ab_target = ab_target
+                L = L.to(device)
+                ab_target = ab_target.to(device)
                 
                 ab_predicted = model(L)
                 loss = criterion(ab_predicted, ab_target)
@@ -78,7 +84,6 @@ if __name__ == '__main__':
         
         print("-" * 60)
 
-    # ============ PLOT LOSSES ============
     print("\n" + "=" * 60)
     print("Training complete!")
     print(f"Best validation loss: {best_val_loss:.6f}")

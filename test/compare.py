@@ -2,8 +2,8 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
-from test.test_autoencoderCNN import FlexibleAutoencoder
-from autoencoderCNN import prepare_dataloaders
+from test.test_autoencoderCAE import FlexibleAutoencoder
+from autoencoderCAE import prepare_dataloaders
 from test.experiments import (
     BASELINE,
     EXP_1A_SMALL_LATENT,
