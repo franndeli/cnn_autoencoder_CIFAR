@@ -3,13 +3,13 @@
 A PyTorch implementation of convolutional autoencoders for image reconstruction and colorization on the CIFAR-10 dataset. This project includes three exercises exploring different aspects of autoencoders.
 
 ## 📋 Table of Contents
-- [Installation](#installation)
-- [Project Structure](#project-structure)
-- [Quick Start](#quick-start)
-- [Exercise 1: Basic Image Reconstruction](#exercise-1-basic-image-reconstruction)
-- [Exercise 2: Architecture Experiments](#exercise-2-architecture-experiments)
-- [Exercise 3: Image Colorization](#exercise-3-image-colorization)
-- [Troubleshooting](#troubleshooting)
+- [🔧 Installation](#🔧-installation)
+- [📁 Project Structure](#📁-project-structure)
+- [🚀 Quick Start](#🚀-quick-start)
+- [📊 Exercise 1: Basic Image Reconstruction](#📊-exercise-1-basic-image-reconstruction)
+- [🔬 Exercise 2: Architecture Experiments](#🔬-exercise-2-architecture-experiments)
+- [🎨 Exercise 3: Image Colorization](#🎨-exercise-3-image-colorization)
+- [🔍 Troubleshooting](#🔍-troubleshooting)
 
 ---
 
